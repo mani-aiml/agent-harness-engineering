@@ -16,23 +16,27 @@ MAX_TOKENS = 16000
 MAX_TURNS = 10
 SYSTEM = "You are a support agent. Look up what you need with the tools, then answer in three sentences or fewer."
 
-# The same code runs on Amazon Bedrock: swap in anthropic.AnthropicBedrockMantle(aws_region="us-east-1")
-# and use the model id "anthropic.claude-sonnet-5".
+# To run on Amazon Bedrock: pip install "anthropic[bedrock]", set up AWS credentials, then use
+# anthropic.AnthropicBedrockMantle(aws_region="us-east-1") and the model id "anthropic.claude-sonnet-5".
 client = anthropic.Anthropic()
 
 
-def run_tool(block, meter: Meter) -> dict:
-    """Run one tool call and wrap its output as the tool_result Claude reads next turn."""
-    meter.lookup(block.name, *block.input.values())
+def raw_traceback(block, error: Exception) -> dict:
+    # Decision: hand the raw traceback back, so the loop keeps going instead of crashing.
+    return {"type": "tool_result", "tool_use_id": block.id, "content": traceback.format_exc()}
+
+
+def run_tool(block, meter: Meter, on_error=raw_traceback) -> dict:
+    """The dispatch: every tool call Claude makes comes through here before anything runs."""
+    name, value = block.name, *block.input.values()
+    meter.tool(name, value)
     try:
-        output = lookup(block.name, *block.input.values())
-    except Exception:
-        # Decision: hand the raw traceback back, so the loop keeps going instead of crashing.
-        output = traceback.format_exc()
-    return {"type": "tool_result", "tool_use_id": block.id, "content": output}
+        return {"type": "tool_result", "tool_use_id": block.id, "content": lookup(name, value)}
+    except Exception as error:
+        return on_error(block, error)
 
 
-def run_agent(task: str, meter: Meter, run_tool=run_tool) -> str:
+def run_agent(task: str, meter: Meter, on_error=raw_traceback) -> str:
     messages = [{"role": "user", "content": task}]
     for _ in range(MAX_TURNS):
         reply = client.messages.create(
@@ -40,14 +44,18 @@ def run_agent(task: str, meter: Meter, run_tool=run_tool) -> str:
         )
         meter.claude(reply)
         if reply.stop_reason != "tool_use":
-            return text_of(reply)
+            return answer_of(reply)
         messages.append({"role": "assistant", "content": reply.content})
-        results = [run_tool(block, meter) for block in reply.content if block.type == "tool_use"]
+        results = [run_tool(block, meter, on_error) for block in reply.content if block.type == "tool_use"]
         messages.append({"role": "user", "content": results})
     raise RuntimeError(f"no answer after {MAX_TURNS} turns")
 
 
-def text_of(reply) -> str:
+def answer_of(reply) -> str:
+    """The text of a finished reply."""
+    if reply.stop_reason != "end_turn":
+        # Decision: only end_turn is an answer. max_tokens means the reply was cut off, so say so.
+        raise RuntimeError(f"Claude stopped on {reply.stop_reason}, so this is not a finished answer")
     return "".join(block.text for block in reply.content if block.type == "text")
 
 

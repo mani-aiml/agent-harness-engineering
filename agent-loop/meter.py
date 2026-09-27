@@ -8,14 +8,14 @@ from typing import Callable
 # (input only; Jev's output tokens are free), both as of Sep 2026.
 CLAUDE_USD = {"claude-sonnet-5": (2.00, 10.00)}
 JEV_USD_IN = 0.042
-FORMATS = {"seconds": ".1f", "Claude calls": ".0f", "input tokens": ",.0f", "lookups": ".0f", "USD": ".5f"}
+FORMATS = {"seconds": ".1f", "Claude calls": ".0f", "input tokens": ",.0f", "tool calls": ".0f", "USD": ".5f"}
 
 
 class Meter:
     def __init__(self, model: str, quiet: bool = False) -> None:
         self.model, self.quiet = model, quiet
         self.claude_calls = self.input_tokens = self.output_tokens = 0
-        self.jev_calls = self.jev_tokens = self.lookups = 0
+        self.jev_calls = self.jev_tokens = self.tool_calls = 0
         self.started = time.perf_counter()
 
     def say(self, line: str) -> None:
@@ -35,9 +35,9 @@ class Meter:
         self.jev_tokens += response.usage.input_tokens
         self.say(f"Jev call {self.jev_calls}: {note}")
 
-    def lookup(self, name: str, value: str) -> None:
-        self.lookups += 1
-        self.say(f"lookup {name}({value})")
+    def tool(self, name: str, value: str) -> None:
+        self.tool_calls += 1
+        self.say(f"tool {name}({value})")
 
     @property
     def usd(self) -> float:
@@ -47,11 +47,11 @@ class Meter:
 
     def summary(self) -> str:
         return (f"{self.claude_calls} Claude calls · {self.input_tokens:,} input tokens · "
-                f"{self.lookups} lookups · ${self.usd:.4f}")
+                f"{self.tool_calls} tool calls · ${self.usd:.4f}")
 
     def row(self) -> dict[str, float]:
         return {"seconds": time.perf_counter() - self.started, "Claude calls": self.claude_calls,
-                "input tokens": self.input_tokens, "lookups": self.lookups, "USD": self.usd}
+                "input tokens": self.input_tokens, "tool calls": self.tool_calls, "USD": self.usd}
 
 
 def compare(task: str, model: str, arms: dict[str, Callable[[str, Meter], str]], repeats: int = 1) -> None:

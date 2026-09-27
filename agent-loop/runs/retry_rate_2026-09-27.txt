@@ -1,0 +1,4 @@
+## 2026-09-27 claude-sonnet-5, anthropic 1.7.0, carrier timeout on, 10 runs per arm (demo/runs/retry_rate_2026-09-27.py)
+Task: Where is order O-1042 right now, and when will it arrive?
+raw traceback  calls [2, 3, 2, 2, 4, 4, 3, 2, 2, 2]  median tokens 2816
+clear return   calls [2, 2, 2, 2, 2, 2, 2, 2, 2, 2]  median tokens 2391

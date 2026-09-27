@@ -8,7 +8,7 @@ next, and the result is flagged as an error.
 import sys
 
 import tools
-from loop import MODEL, run_agent
+from loop import MODEL, raw_traceback, run_agent
 from meter import Meter, compare
 
 # Decision: your own code owns the retry policy, so the tool says plainly that a retry won't help.
@@ -16,19 +16,16 @@ CARRIER_DOWN = ("Carrier tracking is not responding, so trying again won't help 
                 "Answer without tracking and say it's unavailable.")
 
 
-def run_tool(block, meter: Meter) -> dict:
-    meter.lookup(block.name, *block.input.values())
-    try:
-        output = tools.lookup(block.name, *block.input.values())
-        return {"type": "tool_result", "tool_use_id": block.id, "content": output}
-    except tools.CarrierTimeout:
+def clear_error(block, error: Exception) -> dict:
+    if isinstance(error, tools.CarrierTimeout):
         # Decision: one sentence written for the model, saying what failed and what to do next.
         # A timeout looks temporary, so without it the model tries again. is_error marks the failure.
         return {"type": "tool_result", "tool_use_id": block.id, "content": CARRIER_DOWN, "is_error": True}
+    return raw_traceback(block, error)
 
 
 def with_clear_returns(task: str, meter: Meter) -> str:
-    return run_agent(task, meter, run_tool=run_tool)
+    return run_agent(task, meter, on_error=clear_error)
 
 
 if __name__ == "__main__":

@@ -10,7 +10,7 @@ import time
 from typesafe_sdk import Choice
 
 from jev_fetches import jev, jev_fetches
-from loop import MAX_TOKENS, MODEL, client, run_agent, text_of
+from loop import MAX_TOKENS, MODEL, answer_of, client, run_agent
 from meter import Meter, compare
 from tools import DATA
 
@@ -47,7 +47,7 @@ def route_with_claude(task: str, meter: Meter) -> tuple[str, float]:
                                    system=f"Pick the path for this support request. Reply with one word.\n{options}")
     meter.claude(reply)
     # Claude gives a label as text. There is no probability to set a bar on, so it counts as sure.
-    return text_of(reply).strip().lower(), 1.0
+    return answer_of(reply).strip().lower(), 1.0
 
 
 def answer_from_policy(task: str, meter: Meter) -> str:
@@ -56,13 +56,14 @@ def answer_from_policy(task: str, meter: Meter) -> str:
     reply = client.messages.create(model=MODEL, max_tokens=MAX_TOKENS, messages=[{"role": "user", "content": task}],
                                    system=f"Answer from these refund policies in two sentences.\n{policies}")
     meter.claude(reply)
-    return text_of(reply)
+    return answer_of(reply)
 
 
 def hand_to_person(task: str, meter: Meter) -> str:
-    # Decision: actions that change money or orders go to a person, never to a model.
-    meter.say("queued for a person to approve")
-    return "Queued for a person to approve."
+    # Decision: in this demo the handoff is a printed line. In production it would open a ticket
+    # for your team. The agent's tools only read, so no path can move money either way.
+    meter.say("handed to a person (in this demo, a printed line)")
+    return "Handed to a person on the team."
 
 
 PATHS = {"lookup": jev_fetches, "policy": answer_from_policy, "human": hand_to_person}

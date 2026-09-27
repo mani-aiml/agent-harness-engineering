@@ -9,6 +9,7 @@ import re
 import time
 from pathlib import Path
 
+# Decision: every tool here only reads, so nothing the agent does can move money or change an order.
 # Decision: every lookup waits half a second, standing in for a real API round trip.
 LOOKUP_SECONDS = 0.5
 DATA = json.loads((Path(__file__).parent / "data.json").read_text())

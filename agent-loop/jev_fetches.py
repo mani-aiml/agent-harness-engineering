@@ -8,7 +8,7 @@ import sys
 
 from typesafe_sdk import Noul, TypeSafeClient
 
-from loop import MAX_TOKENS, MODEL, client, run_agent, text_of
+from loop import MAX_TOKENS, MODEL, answer_of, client, run_agent
 from meter import Meter, compare
 from tools import TOOLS, candidate_lookups, lookup
 
@@ -47,7 +47,7 @@ def fetch_facts(task: str, meter: Meter) -> list[str]:
         if not chosen:
             break
         for name, value in chosen:
-            meter.lookup(name, value)
+            meter.tool(name, value)
             facts.append(f"{name}({value}) -> {lookup(name, value)}")
         done.update(chosen)
     return facts
@@ -60,7 +60,7 @@ def jev_fetches(task: str, meter: Meter) -> str:
     reply = client.messages.create(model=MODEL, max_tokens=MAX_TOKENS, system=WRITER,
                                    messages=[{"role": "user", "content": prompt}])
     meter.claude(reply)
-    answer = text_of(reply)
+    answer = answer_of(reply)
     if answer.startswith(MISSING):
         # Decision: the fallback is the plain loop, so nothing is ever written from missing facts.
         meter.say(f"Claude says {answer!r}, so the plain loop takes over")
