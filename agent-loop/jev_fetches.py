@@ -12,8 +12,8 @@ from loop import MAX_TOKENS, MODEL, answer_of, client, run_agent
 from meter import Meter, compare
 from tools import TOOLS, candidate_lookups, lookup
 
-# Decision: fetch at 0.7, not higher. A wrong yes costs one wasted read-only lookup;
-# a wrong no costs a missing fact and a fall back to the loop.
+# Decision: fetch at 0.7, not higher. A wrong yes costs an unnecessary read-only lookup, and maybe
+# more if that record names others; a wrong no costs a missing fact.
 FETCH_AT = 0.7
 MAX_ROUNDS = 4
 MISSING = "MISSING:"
@@ -62,7 +62,8 @@ def jev_fetches(task: str, meter: Meter) -> str:
     meter.claude(reply)
     answer = answer_of(reply)
     if answer.startswith(MISSING):
-        # Decision: the fallback is the plain loop, so nothing is ever written from missing facts.
+        # Decision: the fallback is the plain loop. It runs only when Claude starts its reply with
+        # MISSING:, so it catches a missing fact only when Claude flags one.
         meter.say(f"Claude says {answer!r}, so the plain loop takes over")
         return run_agent(task, meter)
     return answer
