@@ -1,0 +1,35 @@
+## 2026-09-27 13:14 claude-sonnet-5, anthropic 1.7.0, typesafe-sdk 0.7.1, lookups 0.5 s, 3 runs each
+
+Task: Customer C-17 says their gateway order never arrived. What happened to it?
+
+median of 3 runs                   seconds  Claude calls  input tokens       lookups           USD
+before: the plain loop                 8.9             4         5,392             4       0.01544
+after: Jev fetches                     5.8             1           437             6       0.00225
+
+Task: What is our refund policy for customers in the UK?
+
+median of 3 runs                   seconds  Claude calls  input tokens       lookups           USD
+before: the plain loop                 3.6             2         2,221             1       0.00576
+after: routed                          1.8             1           192             0       0.00094
+
+Task: Please refund order O-1051 to the card it was charged on.
+
+median of 3 runs                   seconds  Claude calls  input tokens       lookups           USD
+before: the plain loop                 9.5             4         5,603             4       0.01552
+after: routed                          0.2             0             0             0       0.00002
+task                                                                                     Jev          Claude
+Customer C-17 says their gateway order never arrived. What happened            lookup (1.00)          lookup
+When will order O-1090 ship? Tell me what it is waiting on.                    lookup (1.00)          lookup
+Customer C-23 says they were charged twice for order O-1051. Is that           lookup (0.99)          lookup
+What is our refund policy for customers in the UK?                             policy (1.00)          policy
+Do EU customers get a refund if an order is stuck in transit?                  policy (0.88)          policy
+Please refund order O-1051 to the card it was charged on.                       human (0.98)           human
+Cancel order O-1077, the customer changed their mind.                           human (0.99)           human
+Jev: 0.17 s and $0.000016 per decision
+Claude: 1.23 s and $0.000350 per decision
+
+Task: Where is order O-1042 right now, and when will it arrive?
+
+median of 3 runs                   seconds  Claude calls  input tokens       lookups           USD
+before: raw traceback                  6.4             3         4,898             3       0.01239
+after: one clear return                4.4             2         2,391             2       0.00665
