@@ -25,7 +25,7 @@ medians of three runs. Full output in `runs/medians_2026-09-27.txt`.
 | 1, Jev fetches (gateway order task) | 4 Claude calls, 5,392 input tokens | 1 Claude call, 437 input tokens |
 | 2, router (UK refund policy question) | 2 Claude calls, 2,221 input tokens | 1 Claude call, 192 input tokens |
 | 2, router (refund request) | 4 Claude calls, 5,603 input tokens | 0 Claude calls, handed to a person |
-| 3, clear tool returns (carrier timeout, 10 runs each) | 1 or 2 additional calls in 4 of 10 runs (2 to 4 calls) | 2 calls in all 10 |
+| 3, clear tool returns (carrier timeout, two batches of 10) | extra calls in 4 of 10, then 7 of 10; in batch 2 every extra call repeated the shipment lookup; batch 2 median 5,322 input tokens | 2 calls in all 20; batch 2 median 2,391 input tokens |
 
 Routing the same seven requests: Jev and Claude picked the same path on all seven. Jev took
 0.17 s and $0.000016 per decision, Claude 1.23 s and $0.00035, and Jev also returns a confidence.
@@ -48,9 +48,9 @@ To run on Amazon Bedrock: `pip install "anthropic[bedrock]"`, set up AWS credent
 ## Read this before trusting the numbers
 
 - Three runs each (ten for change 3, `runs/retry_rate_2026-09-27.txt`), on made-up support data. Claude takes
-  different paths from run to run: with the raw traceback it took extra calls in 4 of 10 runs,
-  so a single run may not show it. The token figures in that file are upper-middle values, not
-  medians; the probe now saves every run's tokens.
+  different paths from run to run: with the raw traceback it took extra calls in 4, then 7, of
+  10 runs, so a single run may not show it. Batch 1's token figures are upper-middle values; batch
+  2 saved every run and uses a true median.
 - The loop returns only on `end_turn`; any other stop reason, like `max_tokens`, raises.
 - The missing-fact fallback in `jev_fetches.py` fires only when Claude starts its reply with
   `MISSING:`. It is an instruction, so test that Claude follows it on your tasks.

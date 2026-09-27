@@ -1,8 +1,15 @@
-## 2026-09-27 claude-sonnet-5, anthropic 1.7.0, carrier timeout on, 10 runs per arm (demo/runs/retry_rate_2026-09-27.py)
+## Batch 1, 2026-09-27 claude-sonnet-5, anthropic 1.7.0, carrier timeout on, 10 runs per arm (demo/runs/retry_rate_2026-09-27.py)
 Task: Where is order O-1042 right now, and when will it arrive?
 raw traceback  calls [2, 3, 2, 2, 4, 4, 3, 2, 2, 2]  upper-middle tokens 2816
 clear return   calls [2, 2, 2, 2, 2, 2, 2, 2, 2, 2]  upper-middle tokens 2391
 Note: the token figures are sorted(tokens)[5], the upper-middle value of ten, not the median.
 The per-run token counts were not saved. The probe script now saves them and uses
-statistics.median; a rerun on 27 Sep failed on a low API credit balance, so this record stands
-as first run.
+statistics.median. The first rerun attempt failed on a low API credit balance; batch 2 below is
+the rerun after the top-up.
+
+## Batch 2, 2026-09-27 16:33, same setup, rerun with the fixed probe (per-run tokens, shipment lookups,
+## statistics.median). Captured in recording/casts/retry_rate_20260927-163309.cast
+raw traceback: calls [3, 3, 3, 3, 3, 2, 2, 3, 3, 2], shipment lookups [2, 2, 2, 2, 2, 1, 1, 2, 2, 1]
+raw traceback: input tokens [5380, 5330, 5322, 5322, 5019, 2895, 2895, 5363, 5352, 2895], median 5,322
+clear return: calls [2, 2, 2, 2, 2, 2, 2, 2, 2, 2], shipment lookups [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+clear return: input tokens [2406, 2403, 2391, 2403, 2391, 2406, 2391, 2391, 2391, 2391], median 2,391
