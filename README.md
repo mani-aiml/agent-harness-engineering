@@ -8,6 +8,7 @@ on The Agentic Enterprise on YouTube.
 | folder | pattern |
 |---|---|
 | [`agent-loop/`](agent-loop/) | the agent loop written out in about twelve lines, then three changes to it: Jev fetches and Claude writes, a router in front of the loop, and one clear sentence instead of a raw traceback when a tool fails |
+| [`tool-guardrails/`](tool-guardrails/) | a guard in the dispatch for tool calls that change something: rules in code, a person for refunds and cancels, a small decision model and then a bigger one for reversible writes, and a capped refund credential |
 
 ```bash
 cd <folder>
@@ -16,7 +17,7 @@ pip install -r requirements.txt
 cp .env.example .env      # add the keys that folder's README names
 ```
 
-All data in these demos is synthetic, made up for the demo it sits in and for nothing else. Any
+All data in these demos is synthetic, made up for the demo it sits in and for nothing else. Newer folders don't publish their data: their READMEs describe the format so you can bring your own. Any
 resemblance to real people, companies or records is purely coincidental.
 
 MIT licence for everything here.
