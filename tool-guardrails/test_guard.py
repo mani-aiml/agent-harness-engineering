@@ -48,6 +48,7 @@ def decide(name: str, customer: str = "C-23", **args) -> Verdict:
     ("update_email", "C-23", {"customer_id": "C-23", "email": "not-an-email"}, "valid email"),
     ("update_address", "C-23", {"order_id": "O-1051", "address": "1 New Street, Austin"}, "already delivered"),
     ("hold_shipment", "C-23", {"order_id": "1051"}, "valid order id"),
+    ("update_email", "C-23", {"order_id": "O-1051", "customer_id": "C-17", "email": "x@example.org"}, "don't all belong"),
 ])
 def test_rules_stop_the_obvious_calls(monkeypatch, name, customer, args, why) -> None:
     monkeypatch.setattr(jev_guard, "judge", no_model)
@@ -123,3 +124,9 @@ def test_a_write_that_is_not_run_comes_back_as_one_clear_error() -> None:
     result = loop.run_tool(block, "C-17", "refund me", Meter(quiet=True))
     assert result["is_error"] and "did not run" in result["content"]
     assert tools.CHANGES == []
+
+
+def test_lookups_read_only_this_customers_records() -> None:
+    assert tools.call_tool("get_order", {"order_id": "O-1051"}, "C-23").startswith("{")
+    assert tools.call_tool("get_order", {"order_id": "O-1051"}, "C-17") == "No record for O-1051"
+    assert tools.call_tool("get_customer", {"customer_id": "C-17"}, "C-23") == "No record for C-17"

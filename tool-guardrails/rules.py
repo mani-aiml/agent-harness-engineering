@@ -28,7 +28,11 @@ def bad_arguments(call: Call) -> str | None:
 
 def not_this_customer(call: Call) -> str | None:
     owner = owner_of(call.args)
-    return None if owner == call.customer else f"it touches {owner}'s account, and this is {call.customer}'s conversation"
+    if owner == call.customer:
+        return None
+    if owner is None:
+        return f"its ids don't all belong to {call.customer}, whose conversation this is"
+    return f"it touches {owner}'s account, and this is {call.customer}'s conversation"
 
 
 def more_than_was_paid(call: Call) -> str | None:
