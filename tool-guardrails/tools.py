@@ -91,11 +91,17 @@ class OverLimit(Exception):
 
 
 def owner_of(args: dict) -> str | None:
-    """The customer an order id or customer id in these arguments belongs to."""
+    """The one customer every order id and customer id in these arguments belongs to, or None.
+
+    Decision: every id is checked, so the customer's own order id can't vouch for someone else's customer id.
+    """
+    owners = set()
     if "order_id" in args:
         order = DATA["orders"].get(args["order_id"])
-        return order["customer_id"] if order else None
-    return args.get("customer_id")
+        owners.add(order["customer_id"] if order else None)
+    if "customer_id" in args:
+        owners.add(args["customer_id"])
+    return owners.pop() if len(owners) == 1 else None
 
 
 def refund_with_credential(customer: str, args: dict) -> None:
@@ -119,11 +125,15 @@ def reset() -> None:
         invoice["refunded"] = 0.0
 
 
-def lookup(name: str, value: str) -> str:
-    """Run one lookup and return the record as JSON text."""
+def lookup(name: str, value: str, customer: str) -> str:
+    """Run one lookup for this customer and return the record as JSON text."""
     time.sleep(LOOKUP_SECONDS)
-    _, _, table = TOOLS[name]
+    _, arg, table = TOOLS[name]
     record = DATA[table].get(value)
+    # Decision: a lookup by customer or order id reads only the signed-in customer's own records. Someone
+    # else's reads the same as one that doesn't exist, so the agent can't be talked into revealing it.
+    if arg in {"customer_id", "order_id"} and owner_of({arg: value}) != customer:
+        record = None
     return json.dumps(record) if record is not None else f"No record for {value}"
 
 
@@ -134,4 +144,4 @@ def call_tool(name: str, args: dict, customer: str) -> str:
             refund_with_credential(customer, args)
         CHANGES.append(f"{name}({', '.join(map(str, args.values()))})")
         return f"Done: {CHANGES[-1]}."
-    return lookup(name, *args.values())
+    return lookup(name, *args.values(), customer)
